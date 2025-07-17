@@ -39,13 +39,13 @@ class TodoTest extends TestCase
             ->post(route('todos.store'), $todoData);
 
         $response->assertRedirect(route('todos.index'));
-        $this->assertDatabaseHas('todos', $todoData);
+        $this->assertDatabaseHas('todos', array_merge($todoData, ['user_id' => $user->id]));
     }
 
     public function test_user_can_update_todo()
     {
         $user = User::factory()->create();
-        $todo = Todo::factory()->create();
+        $todo = Todo::factory()->create(['user_id' => $user->id]);
 
         $updatedData = [
             'title' => 'Updated Todo',
@@ -64,7 +64,7 @@ class TodoTest extends TestCase
     public function test_user_can_delete_todo()
     {
         $user = User::factory()->create();
-        $todo = Todo::factory()->create();
+        $todo = Todo::factory()->create(['user_id' => $user->id]);
 
         $response = $this
             ->actingAs($user)

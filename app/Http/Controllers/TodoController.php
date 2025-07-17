@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Todo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class TodoController extends Controller
@@ -13,7 +14,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        $todos = Todo::latest()->get();
+        $todos = Auth::user()->todos()->latest()->get();
         return Inertia::render('Todos/Index', [
             'todos' => $todos
         ]);
@@ -29,13 +30,16 @@ class TodoController extends Controller
 
     /**
      * Store a newly created resource in storage.
-     */    public function store(Request $request)
+     */
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'completed' => 'boolean',
         ]);
+
+        $validated['user_id'] = Auth::user()->id;
 
         Todo::create($validated);
 
