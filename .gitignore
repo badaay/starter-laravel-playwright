@@ -1,0 +1,10 @@
+/vendor
+/node_modules
+/playwright-report
+/.env
+/.vscode
+/test-results
+composer.lock
+package-lock.json
+npm-debug.log
+yarn.lock
