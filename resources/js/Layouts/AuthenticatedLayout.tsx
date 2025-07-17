@@ -41,25 +41,6 @@ export default function Authenticated({
                                 >
                                     Todos
                                 </NavLink>
-                                <NavLink
-                                    href={route('pomodoro')}
-                                    active={route().current('pomodoro')}
-                                >
-                                    Pomodoro
-                                </NavLink>
-                                <NavLink
-                                    href={route('analytics')}
-                                    active={route().current('analytics')}
-                                >
-                                    Analytics
-                                </NavLink>
-                                {/* Add a navigation link for the CORS Test page in the top bar */}
-                                <NavLink
-                                    href={route('cors.test')}
-                                    active={route().current('cors.test')}
-                                >
-                                    CORS Test
-                                </NavLink>
                             </div>
                         </div>
 
@@ -171,25 +152,6 @@ export default function Authenticated({
                             active={route().current('todos.*')}
                         >
                             Todos
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('pomodoro')}
-                            active={route().current('pomodoro')}
-                        >
-                            Pomodoro
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('analytics')}
-                            active={route().current('analytics')}
-                        >
-                            Analytics
-                        </ResponsiveNavLink>
-                        {/* For mobile menu, add similar link */}
-                        <ResponsiveNavLink
-                            href={route('cors.test')}
-                            active={route().current('cors.test')}
-                        >
-                            CORS Test
                         </ResponsiveNavLink>
                     </div>
 

@@ -8,7 +8,7 @@
 <img src="https://img.shields.io/badge/Tailwind-CSS-blue?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS">
 </p>
 
-A modern Laravel application that combines **Todo management**, **Multi-Factor Authentication (MFA)**, and **Pomodoro timer functionality**. Built with Laravel 12, React with TypeScript (via Inertia.js), and comprehensive end-to-end testing with Playwright.
+A modern Laravel application that combines **Todo management** and **Multi-Factor Authentication (MFA)**. Built with Laravel 12, React with TypeScript (via Inertia.js), and comprehensive end-to-end testing with Playwright.
 
 ## 🚀 Features
 
@@ -25,20 +25,7 @@ A modern Laravel application that combines **Todo management**, **Multi-Factor A
 - Full CRUD operations for todos
 - User-scoped todos (privacy by design)
 - Todo attributes: title, description, completion status
-- Integration with Pomodoro sessions
 - Real-time updates via Inertia.js
-
-### ⏰ **Pomodoro Timer**
-- Focus/break mode timer functionality
-- Session tracking and analytics
-- Integration with todo items
-- Productivity statistics and insights
-
-### 📊 **Analytics & Reporting**
-- Productivity scoring algorithms
-- Weekly overview reports
-- Focus distribution analytics
-- Session statistics and trends
 
 ### 🔌 **RESTful API**
 - Complete API endpoints for all features
@@ -179,14 +166,6 @@ php artisan test
 - timestamps
 ```
 
-### **Pomodoro Sessions Table**
-```sql
-- id (primary key)
-- user_id (foreign key → users.id)
-- duration (integer), completed (boolean)
-- timestamps
-```
-
 ## 🏗 Architecture Overview
 
 ### **Backend Structure**
@@ -196,15 +175,12 @@ app/
 │   ├── Api/              # RESTful API controllers
 │   ├── Auth/             # Authentication controllers
 │   ├── TodoController.php
-│   ├── MfaController.php
-│   └── PomodoroSessionController.php
+│   └── MfaController.php
 ├── Models/
 │   ├── User.php          # User model with MFA relationships
 │   ├── Todo.php, MfaConfiguration.php
-│   └── PomodoroSession.php
 ├── Services/
-│   ├── MfaService.php    # MFA business logic
-│   └── AnalyticsService.php
+│   └── MfaService.php    # MFA business logic
 └── Http/Middleware/
     └── EnsureMfaAuthenticated.php
 ```
@@ -216,7 +192,7 @@ resources/js/
 │   ├── Auth/             # Authentication pages
 │   ├── Todos/            # Todo CRUD pages
 │   ├── Profile/          # User profile & MFA setup
-│   └── Dashboard.tsx, Pomodoro.tsx
+│   └── Dashboard.tsx
 ├── Components/           # Reusable UI components
 ├── Layouts/             # Page layouts
 └── Contexts/            # React contexts

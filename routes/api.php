@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\TodoController;
-use App\Http\Controllers\Api\CollectorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -41,15 +40,4 @@ Route::middleware('auth:sanctum')->prefix('mfa')->name('api.mfa.')->group(functi
     Route::post('/verify', [App\Http\Controllers\Api\MfaController::class, 'verify'])->name('verify');
     Route::post('/email-code', [App\Http\Controllers\Api\MfaController::class, 'requestEmailCode'])->name('email-code');
     Route::post('/recovery-codes', [App\Http\Controllers\Api\MfaController::class, 'regenerateRecoveryCodes'])->name('recovery-codes');
-});
-
-// Collector API Route - supports both GET and POST
-Route::match(['GET', 'POST'], '/collector', function (Illuminate\Http\Request $request) {
-    return response()->json([
-        'message' => 'Random message from API: ' . Str::random(10),
-        'received' => $request->all(),
-        'method' => $request->method(),
-        'source' => 'api.php',
-        'timestamp' => now()
-    ]);
 });
