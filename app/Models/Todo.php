@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Todo extends Model
 {
@@ -16,6 +15,7 @@ class Todo extends Model
      * @var array
      */
     protected $fillable = [
+        'user_id',
         'title',
         'description',
         'completed'
@@ -31,10 +31,10 @@ class Todo extends Model
     ];
 
     /**
-     * Get the pomodoro sessions associated with the todo.
+     * Get the user that owns the todo.
      */
-    public function pomodoroSessions(): HasMany
+    public function user()
     {
-        return $this->hasMany(PomodoroSession::class);
+        return $this->belongsTo(User::class);
     }
 }

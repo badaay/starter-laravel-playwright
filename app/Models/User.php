@@ -58,18 +58,18 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the todos for the user.
+     */
+    public function todos()
+    {
+        return $this->hasMany(Todo::class);
+    }
+
+    /**
      * Check if the user has MFA enabled.
      */
     public function hasMfaEnabled(): bool
     {
         return $this->mfaConfiguration?->enabled ?? false;
-    }
-
-    /**
-     * Get the pomodoro sessions associated with the user.
-     */
-    public function pomodoroSessions(): HasMany
-    {
-        return $this->hasMany(PomodoroSession::class);
     }
 }

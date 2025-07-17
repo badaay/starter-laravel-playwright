@@ -122,6 +122,8 @@ npm run dev
 | `user@example.com` | `password` | Regular user with sample todos |
 | `admin@example.com` | `password` | Admin user |
 
+> **Note:** Test accounts are automatically created when running `php artisan migrate:fresh --seed` or can be created independently with `php artisan db:seed --class=DefaultUsersSeeder`
+
 ## 🧪 Testing
 
 ### **Run E2E tests with Playwright**
