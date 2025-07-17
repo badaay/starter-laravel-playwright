@@ -70,6 +70,22 @@ class User extends Authenticatable
      */
     public function hasMfaEnabled(): bool
     {
-        return $this->mfaConfiguration?->enabled ?? false;
+        return $this->mfaConfiguration?->hasAnyMfaEnabled() ?? false;
+    }
+
+    /**
+     * Check if the user has TOTP MFA enabled.
+     */
+    public function hasTotpEnabled(): bool
+    {
+        return $this->mfaConfiguration?->totp_enabled ?? false;
+    }
+
+    /**
+     * Check if the user has Email MFA enabled.
+     */
+    public function hasEmailMfaEnabled(): bool
+    {
+        return $this->mfaConfiguration?->email_enabled ?? false;
     }
 }

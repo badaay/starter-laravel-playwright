@@ -59,6 +59,7 @@ class MfaController extends Controller
     {
         $request->validate([
             'code' => 'required|string',
+            'type' => 'required|in:totp,email',
         ]);
 
         $user = Auth::user();
@@ -68,36 +69,78 @@ class MfaController extends Controller
             return back()->withErrors(['code' => 'MFA setup not initialized.']);
         }
 
-        if ($this->mfaService->verifyCode($mfaConfig->secret, $request->code)) {
-            $mfaConfig->enabled = true;
+        $verified = false;
+
+        if ($request->type === 'totp') {
+            $verified = $this->mfaService->verifyCode($mfaConfig->secret, $request->code);
+            if ($verified) {
+                $mfaConfig->totp_enabled = true;
+            }
+        } elseif ($request->type === 'email') {
+            $verified = $this->mfaService->verifyEmailCode($user, $request->code);
+            if ($verified) {
+                $mfaConfig->email_enabled = true;
+            }
+        }
+
+        if ($verified) {
+            $mfaConfig->enabled = $mfaConfig->hasAnyMfaEnabled();
             $mfaConfig->verified_at = now();
             $this->saveMfaConfig($mfaConfig);
 
+            $type_name = $request->type === 'totp' ? 'Authenticator App' : 'Email';
             return redirect()->route('profile.edit')
-                ->with('status', 'mfa-enabled');
+                ->with('status', "mfa-{$request->type}-enabled")
+                ->with('message', "{$type_name} MFA has been enabled successfully.");
         }
 
         return back()->withErrors(['code' => 'The verification code is invalid.']);
     }
 
     /**
-     * Disable MFA.
+     * Disable specific MFA type.
      */
     public function disable(Request $request)
     {
         $request->validate([
             'password' => ['required', 'current_password'],
+            'type' => 'required|in:totp,email,all',
         ]);
 
         $user = Auth::user();
+        $mfaConfig = $user->mfaConfiguration;
 
-        if ($user->mfaConfiguration) {
-            $user->mfaConfiguration->enabled = false;
-            $this->saveMfaConfig($user->mfaConfiguration);
+        if (!$mfaConfig) {
+            return redirect()->route('profile.edit')
+                ->withErrors(['error' => 'MFA configuration not found.']);
         }
 
+        if ($request->type === 'totp') {
+            $mfaConfig->totp_enabled = false;
+            $mfaConfig->secret = null; // Clear the secret key
+        } elseif ($request->type === 'email') {
+            $mfaConfig->email_enabled = false;
+            $mfaConfig->clearEmailCode(); // Clear any pending codes
+        } elseif ($request->type === 'all') {
+            $mfaConfig->totp_enabled = false;
+            $mfaConfig->email_enabled = false;
+            $mfaConfig->secret = null;
+            $mfaConfig->clearEmailCode();
+        }
+
+        // Update the general enabled flag
+        $mfaConfig->enabled = $mfaConfig->hasAnyMfaEnabled();
+        $this->saveMfaConfig($mfaConfig);
+
+        $type_name = match ($request->type) {
+            'totp' => 'Authenticator App',
+            'email' => 'Email',
+            'all' => 'All',
+        };
+
         return redirect()->route('profile.edit')
-            ->with('status', 'mfa-disabled');
+            ->with('status', "mfa-{$request->type}-disabled")
+            ->with('message', "{$type_name} MFA has been disabled.");
     }
 
     /**
@@ -122,6 +165,7 @@ class MfaController extends Controller
     {
         $request->validate([
             'code' => 'required|string',
+            'type' => 'sometimes|in:totp,email,recovery',
         ]);
 
         $user = Auth::user();
@@ -132,12 +176,15 @@ class MfaController extends Controller
         }
 
         $isValid = false;
+        $type = $request->type ?? 'totp';
 
-        if (session('use_recovery_code', false)) {
+        // Determine verification type
+        if ($type === 'recovery' || session('use_recovery_code', false)) {
             $isValid = $this->mfaService->verifyRecoveryCode($user, $request->code);
-        } elseif (session('use_email_code', false)) {
-            $isValid = $this->verifyEmailCode($request->code);
+        } elseif ($type === 'email' || session('use_email_code', false)) {
+            $isValid = $this->mfaService->verifyEmailCode($user, $request->code);
         } else {
+            // Default to TOTP verification
             $isValid = $this->mfaService->verifyCode($mfaConfig->secret, $request->code);
         }
 
@@ -184,48 +231,167 @@ class MfaController extends Controller
     }
 
     /**
-     * Show email code form.
+     * Setup email MFA.
      */
-    public function showEmailForm()
+    public function setupEmailMfa()
     {
-        $request = request();
-        $request->session()->put('use_email_code', true);
-        $request->session()->forget('use_recovery_code');
-
-        // Generate and send email code
         $user = Auth::user();
-        $code = $this->mfaService->generateEmailCode();
 
-        // Store the code in the session with a timestamp
-        $request->session()->put('mfa_email_code', [
-            'code' => $code,
-            'expires_at' => now()->addMinutes(10)->timestamp,
+        // Create or get MFA configuration
+        $mfaConfig = $user->mfaConfiguration()->firstOrCreate([
+            'user_id' => $user->id,
         ]);
 
-        // Send the code via email
-        $this->mfaService->sendMfaCodeByEmail($user, $code);
-
-        return redirect()->route('mfa.challenge');
+        return Inertia::render('Auth/MfaEmailSetup');
     }
 
     /**
-     * Verify an email code.
+     * Send email code for setup.
      */
-    public function verifyEmailCode(string $code): bool
+    public function sendEmailCode()
     {
-        $emailCode = session('mfa_email_code');
+        $user = Auth::user();
 
-        if (!$emailCode || !is_array($emailCode)) {
-            return false;
+        // Send email code for verification
+        $code = $this->mfaService->sendMfaCodeByEmail($user);
+
+        return back()->with('status', 'email-code-sent')
+            ->with('message', 'A verification code has been sent to your email address.');
+    }
+
+    /**
+     * Enable email MFA.
+     */
+    public function enableEmailMfa(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $mfaConfig = $user->mfaConfiguration;
+
+        if (!$mfaConfig) {
+            return back()->withErrors(['code' => 'MFA setup not initialized.']);
         }
 
-        // Check if the code is expired
-        if (time() > $emailCode['expires_at']) {
-            return false;
+        $verified = $this->mfaService->verifyEmailCode($user, $request->code);
+
+        if ($verified) {
+            $mfaConfig->email_enabled = true;
+            $mfaConfig->enabled = $mfaConfig->hasAnyMfaEnabled();
+            $mfaConfig->verified_at = now();
+            $this->saveMfaConfig($mfaConfig);
+
+            return redirect()->route('profile.edit')
+                ->with('status', 'mfa-email-enabled')
+                ->with('message', 'Email MFA has been enabled successfully.');
         }
 
-        // Verify the code
-        return $emailCode['code'] === $code;
+        return back()->withErrors(['code' => 'The verification code is invalid.']);
+    }
+
+    /**
+     * Disable TOTP MFA.
+     */
+    public function disableTotpMfa(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = Auth::user();
+        $mfaConfig = $user->mfaConfiguration;
+
+        if (!$mfaConfig) {
+            return redirect()->route('profile.edit')
+                ->withErrors(['error' => 'MFA configuration not found.']);
+        }
+
+        $mfaConfig->totp_enabled = false;
+        $mfaConfig->secret = null; // Clear the secret key
+        $mfaConfig->enabled = $mfaConfig->hasAnyMfaEnabled();
+        $this->saveMfaConfig($mfaConfig);
+
+        return redirect()->route('profile.edit')
+            ->with('status', 'mfa-totp-disabled')
+            ->with('message', 'Authenticator App MFA has been disabled.');
+    }
+
+    /**
+     * Disable email MFA.
+     */
+    public function disableEmailMfa(Request $request)
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = Auth::user();
+        $mfaConfig = $user->mfaConfiguration;
+
+        if (!$mfaConfig) {
+            return redirect()->route('profile.edit')
+                ->withErrors(['error' => 'MFA configuration not found.']);
+        }
+
+        $mfaConfig->email_enabled = false;
+        $mfaConfig->clearEmailCode(); // Clear any pending codes
+        $mfaConfig->enabled = $mfaConfig->hasAnyMfaEnabled();
+        $this->saveMfaConfig($mfaConfig);
+
+        return redirect()->route('profile.edit')
+            ->with('status', 'mfa-email-disabled')
+            ->with('message', 'Email MFA has been disabled.');
+    }
+
+    /**
+     * Request email code.
+     */
+    public function requestEmailCode()
+    {
+        $user = Auth::user();
+
+        if (!$user->hasEmailMfaEnabled()) {
+            return response()->json([
+                'error' => 'Email MFA is not enabled for this account.'
+            ], 400);
+        }
+
+        $success = $this->mfaService->requestEmailCode($user);
+
+        if ($success) {
+            return response()->json([
+                'message' => 'Verification code sent to your email address.',
+                'email' => $user->email
+            ]);
+        }
+
+        return response()->json([
+            'error' => 'Failed to send verification code.'
+        ], 500);
+    }
+
+    /**
+     * Show email code form for MFA challenge.
+     */
+    public function showEmailMfaForm()
+    {
+        $user = Auth::user();
+
+        if (!$user->hasEmailMfaEnabled()) {
+            return redirect()->route('mfa.challenge')
+                ->withErrors(['error' => 'Email MFA is not enabled.']);
+        }
+
+        // Send a new email code
+        $this->mfaService->requestEmailCode($user);
+
+        return Inertia::render('Auth/MfaChallenge', [
+            'email_mfa' => true,
+            'email' => $user->email,
+            'message' => 'A verification code has been sent to your email address.',
+        ]);
     }
 
     /**

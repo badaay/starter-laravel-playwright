@@ -49,9 +49,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/challenge', [MfaController::class, 'challenge'])->name('challenge');
         Route::post('/verify', [MfaController::class, 'verify'])->name('verify');
         Route::get('/recovery', [MfaController::class, 'showRecoveryForm'])->name('recovery');
-        Route::get('/email', [MfaController::class, 'showEmailForm'])->name('email');
         Route::post('/recovery/regenerate', [MfaController::class, 'regenerateRecoveryCodes'])
             ->name('recovery.regenerate');
+
+        // Email MFA routes
+        Route::get('/email/setup', [MfaController::class, 'setupEmailMfa'])->name('email.setup');
+        Route::post('/email/send', [MfaController::class, 'sendEmailCode'])->name('email.send');
+        Route::post('/email/enable', [MfaController::class, 'enableEmailMfa'])->name('email.enable');
+        Route::post('/email/disable', [MfaController::class, 'disableEmailMfa'])->name('email.disable');
+        Route::get('/email', [MfaController::class, 'showEmailMfaForm'])->name('email');
+        Route::post('/email/request', [MfaController::class, 'requestEmailCode'])->name('email.request');
+
+        // TOTP MFA routes
+        Route::post('/totp/disable', [MfaController::class, 'disableTotpMfa'])->name('totp.disable');
     });
 });
 

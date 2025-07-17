@@ -10,7 +10,7 @@ export default function Create() {
     const { data, setData, post, processing, errors, reset } = useForm({
         title: '',
         description: '',
-        completed: false
+        completed: false as boolean
     });
 
     const submit: FormEventHandler = (e) => {

@@ -33,8 +33,8 @@ export default function ApiTokensForm({ className = '', tokens = [] }: { classNa
     const createToken = () => {
         createApiTokenForm.post(route('api-tokens.store'), {
             preserveScroll: true,
-            onSuccess: (response) => {
-                setPlainTextToken(response.props.plainTextToken);
+            onSuccess: (response: any) => {
+                setPlainTextToken(response.props.plainTextToken as string);
                 setApiTokens([response.props.token, ...apiTokens]);
 
                 setCreatingToken(false);

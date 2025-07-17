@@ -25,6 +25,8 @@ class ProfileController extends Controller
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
             'mfaEnabled' => $mfaConfig ? $mfaConfig->enabled : false,
+            'totpEnabled' => $mfaConfig ? $mfaConfig->totp_enabled : false,
+            'emailMfaEnabled' => $mfaConfig ? $mfaConfig->email_enabled : false,
             'recoveryCodes' => session('recovery-codes')
                 ?? ($mfaConfig && $mfaConfig->enabled ? $mfaConfig->recovery_codes : []),
         ]);

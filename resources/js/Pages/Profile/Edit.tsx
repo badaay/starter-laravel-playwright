@@ -12,11 +12,15 @@ export default function Edit({
     mustVerifyEmail,
     status,
     mfaEnabled = false,
+    totpEnabled = false,
+    emailMfaEnabled = false,
     recoveryCodes = [],
 }: PageProps<{
     mustVerifyEmail: boolean;
     status?: string;
     mfaEnabled?: boolean;
+    totpEnabled?: boolean;
+    emailMfaEnabled?: boolean;
     recoveryCodes?: string[];
 }>) {
     const [activeTab, setActiveTab] = useState('profile');
@@ -136,6 +140,8 @@ export default function Edit({
                                     className="max-w-xl"
                                     user={auth.user}
                                     mfaEnabled={mfaEnabled}
+                                    totpEnabled={totpEnabled}
+                                    emailMfaEnabled={emailMfaEnabled}
                                     recoveryCodes={recoveryCodes}
                                 />
                             </div>
