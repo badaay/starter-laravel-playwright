@@ -3,7 +3,6 @@ import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import ThemeToggle from '@/Components/ThemeToggle';
-import PomodoroWidget from '@/Components/PomodoroWidget';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState } from 'react';
 
@@ -192,9 +191,6 @@ export default function Authenticated({
             )}
 
             <main>{children}</main>
-
-            {/* Floating Pomodoro Widget */}
-            <PomodoroWidget />
         </div>
     );
 }

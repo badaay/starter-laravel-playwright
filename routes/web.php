@@ -4,6 +4,7 @@ use App\Http\Controllers\MfaController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -16,7 +17,20 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $user = Auth::user();
+    $todos = $user->todos()->latest()->take(5)->get();
+    $todosCount = $user->todos()->count();
+    $completedTodosCount = $user->todos()->where('completed', true)->count();
+    $pendingTodosCount = $user->todos()->where('completed', false)->count();
+    $mfaEnabled = $user->hasMfaEnabled();
+
+    return Inertia::render('Dashboard', [
+        'todos' => $todos,
+        'todosCount' => $todosCount,
+        'completedTodosCount' => $completedTodosCount,
+        'pendingTodosCount' => $pendingTodosCount,
+        'mfaEnabled' => $mfaEnabled,
+    ]);
 })->middleware(['auth', 'verified', \App\Http\Middleware\EnsureMfaAuthenticated::class])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
