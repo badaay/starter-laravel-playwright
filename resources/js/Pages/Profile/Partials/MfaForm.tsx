@@ -19,12 +19,20 @@ export default function MfaForm({
     mfaEnabled?: boolean, 
     totpEnabled?: boolean, 
     emailMfaEnabled?: boolean, 
-    recoveryCodes?: string[] 
+    recoveryCodes?: string[] | null 
 }) {
     const [showingRecoveryCodes, setShowingRecoveryCodes] = useState(false);
     const [confirmingTotpDisable, setConfirmingTotpDisable] = useState(false);
     const [confirmingEmailDisable, setConfirmingEmailDisable] = useState(false);
-    const [isEmailVerified, setIsEmailVerified] = useState(!!user.email_verified_at);
+    const [isEmailVerified, setIsEmailVerified] = useState(!!user?.email_verified_at);
+
+    // Add null checks for all props
+    if (!user) {
+        return <div className={className}>Loading...</div>;
+    }
+    
+    // Ensure recoveryCodes is always an array
+    const safeRecoveryCodes = recoveryCodes || [];
 
     // Check email verification status dynamically
     useEffect(() => {
@@ -162,10 +170,10 @@ export default function MfaForm({
                 {/* Email MFA Section */}
                 <div className="border rounded-lg p-4 dark:border-gray-700">
                     <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">
-                        Email Verification
+                        Email-Based Two-Factor Authentication
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Receive verification codes via email. Codes are valid for 10 minutes. 
+                        Receive one-time verification codes via email during login. Codes are valid for 10 minutes. 
                         {!isEmailVerified && (
                             <span className="text-amber-600 dark:text-amber-400 font-medium"> Note: Your email must be verified first.</span>
                         )}
@@ -180,7 +188,7 @@ export default function MfaForm({
                                 </svg>
                                 <div>
                                     <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                                        Email Verification Required
+                                        Email Address Verification Required
                                     </h4>
                                     <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                                         You must verify your email address <strong>{user.email}</strong> before enabling email-based two-factor authentication.
@@ -193,7 +201,7 @@ export default function MfaForm({
                                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                             </svg>
-                                            Verify Email First
+                                            Verify Email Address First
                                         </Link>
                                     </div>
                                 </div>
@@ -215,7 +223,7 @@ export default function MfaForm({
                                         href={route('mfa.email.setup')}
                                         className="inline-flex items-center rounded-md border border-transparent bg-gray-800 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-gray-700 focus:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 active:bg-gray-900 dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-white dark:focus:bg-white dark:focus:ring-offset-gray-800 dark:active:bg-gray-300"
                                     >
-                                        Setup Email Verification
+                                        Setup Email Two-Factor Authentication
                                     </Link>
                                 </div>
                             ) : (
@@ -224,10 +232,10 @@ export default function MfaForm({
                                         disabled
                                         className="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-400 cursor-not-allowed"
                                     >
-                                        Setup Email Verification
+                                        Setup Email Two-Factor Authentication
                                     </button>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                        Email verification required before enabling this feature.
+                                        Email address verification required before enabling this feature.
                                     </p>
                                 </div>
                             )}
@@ -238,7 +246,7 @@ export default function MfaForm({
                                 <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
-                                <span className="text-sm font-medium text-green-600 dark:text-green-400">Email verification is enabled</span>
+                                <span className="text-sm font-medium text-green-600 dark:text-green-400">Email two-factor authentication is enabled</span>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                                 Verification codes will be sent to: <strong>{user.email}</strong>
@@ -248,12 +256,12 @@ export default function MfaForm({
                                 <SecondaryButton
                                     onClick={() => setConfirmingEmailDisable(true)}
                                 >
-                                    Disable Email Verification
+                                    Disable Email Two-Factor Authentication
                                 </SecondaryButton>
                             ) : (
                                 <div className="mt-3">
                                     <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
-                                        Please enter your password to confirm you would like to disable email verification.
+                                        Please enter your password to confirm you would like to disable email two-factor authentication.
                                     </p>
                                     <form onSubmit={disableEmailMfa} className="space-y-3">
                                         <div>
@@ -283,14 +291,14 @@ export default function MfaForm({
                                             </SecondaryButton>
                                         </div>
                                     </form>
-                                                </div>
+                                </div>
                             )}
                         </div>
                     )}
                 </div>
 
                 {/* Recovery Codes Section */}
-                {(totpEnabled || emailMfaEnabled) && recoveryCodes.length > 0 && (
+                {(totpEnabled || emailMfaEnabled) && safeRecoveryCodes.length > 0 && (
                     <div className="border rounded-lg p-4 dark:border-gray-700">
                         <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">
                             Recovery Codes
@@ -312,7 +320,7 @@ export default function MfaForm({
                         {showingRecoveryCodes && (
                             <div className="mb-4 rounded bg-gray-100 p-4 font-mono text-sm text-gray-800 dark:bg-gray-900 dark:text-gray-200">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    {recoveryCodes.map((code, index) => (
+                                    {safeRecoveryCodes.map((code, index) => (
                                         <div key={index} className="p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
                                             {code}
                                         </div>

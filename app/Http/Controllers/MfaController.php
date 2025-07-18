@@ -152,9 +152,24 @@ class MfaController extends Controller
             return redirect()->intended();
         }
 
+        $user = Auth::user();
+        $mfaConfig = $user->mfaConfiguration;
+        
+        $usesRecoveryCode = session('use_recovery_code', false);
+        $usesEmailCode = session('use_email_code', false);
+
+        // If user only has email MFA enabled and no specific mode is set, automatically use email
+        if ($mfaConfig && !$mfaConfig->totp_enabled && $mfaConfig->email_enabled && !$usesRecoveryCode && !$usesEmailCode) {
+            session(['use_email_code' => true]);
+            $usesEmailCode = true;
+            
+            // Automatically send email code
+            $this->mfaService->sendMfaCodeByEmail($user);
+        }
+
         return Inertia::render('Auth/MfaChallenge', [
-            'usesRecoveryCode' => session('use_recovery_code', false),
-            'usesEmailCode' => session('use_email_code', false),
+            'usesRecoveryCode' => $usesRecoveryCode,
+            'usesEmailCode' => $usesEmailCode,
         ]);
     }
 
@@ -178,14 +193,17 @@ class MfaController extends Controller
         $isValid = false;
         $type = $request->type ?? 'totp';
 
-        // Determine verification type
+        // Determine verification type based on what's enabled and what's requested
         if ($type === 'recovery' || session('use_recovery_code', false)) {
             $isValid = $this->mfaService->verifyRecoveryCode($user, $request->code);
         } elseif ($type === 'email' || session('use_email_code', false)) {
-            $isValid = $this->mfaService->verifyEmailCode($user, $request->code);
-        } else {
-            // Default to TOTP verification
+            $isValid = $this->mfaService->verifyEmailCodeForLogin($user, $request->code);
+        } elseif ($mfaConfig->totp_enabled && $mfaConfig->secret) {
+            // Only try TOTP if it's enabled and secret exists
             $isValid = $this->mfaService->verifyCode($mfaConfig->secret, $request->code);
+        } elseif ($mfaConfig->email_enabled) {
+            // Fall back to email verification if TOTP is not available
+            $isValid = $this->mfaService->verifyEmailCodeForLogin($user, $request->code);
         }
 
         if ($isValid) {

@@ -42,10 +42,10 @@ export default function MfaEmailSetup({}: Props) {
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 flex-1 flex flex-col">
                         <div className="p-4 md:p-8 text-gray-900 dark:text-gray-100 flex-1 flex flex-col">
                             <div className="flex-1 flex flex-col">
-                                <h3 className="mb-3 text-2xl font-medium text-center">Email Verification Setup</h3>
+                                <h3 className="mb-3 text-2xl font-medium text-center">Email Two-Factor Authentication Setup</h3>
                                 <p className="mb-8 text-center text-sm text-gray-600 dark:text-gray-400">
-                                    Set up email-based two-factor authentication. You'll receive verification codes 
-                                    via email when logging in.
+                                    Set up email-based two-factor authentication. You'll receive one-time verification codes 
+                                    via email when logging in for additional security.
                                 </p>
 
                                 <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
@@ -58,7 +58,7 @@ export default function MfaEmailSetup({}: Props) {
                                             </div>
                                             <p className="mb-6 text-gray-600 dark:text-gray-400">
                                                 We'll send a test verification code to your email address to ensure 
-                                                email delivery is working properly.
+                                                the email delivery is working properly for two-factor authentication.
                                             </p>
                                             <form onSubmit={sendTestCode}>
                                                 <PrimaryButton className="w-full justify-center py-3 text-lg" disabled={processing}>
@@ -98,7 +98,7 @@ export default function MfaEmailSetup({}: Props) {
 
                                                 <div className="flex flex-col space-y-3">
                                                     <PrimaryButton className="w-full justify-center py-3 text-lg" disabled={processing}>
-                                                        Enable Email Verification
+                                                        Enable Email Two-Factor Authentication
                                                     </PrimaryButton>
                                                     
                                                     <SecondaryButton
@@ -118,7 +118,7 @@ export default function MfaEmailSetup({}: Props) {
 
                                     <div className="mt-8 text-center">
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            Email codes expire after 10 minutes and can only be used once.
+                                            Two-factor authentication codes expire after 10 minutes and can only be used once.
                                         </p>
                                     </div>
                                 </div>

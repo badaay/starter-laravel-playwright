@@ -29,7 +29,7 @@ class ProfileController extends Controller
             'totpEnabled' => $mfaConfig ? $mfaConfig->totp_enabled : false,
             'emailMfaEnabled' => $mfaConfig ? $mfaConfig->email_enabled : false,
             'recoveryCodes' => session('recovery-codes')
-                ?? ($mfaConfig && $mfaConfig->enabled ? $mfaConfig->recovery_codes : []),
+                ?? ($mfaConfig && $mfaConfig->enabled && $mfaConfig->recovery_codes ? $mfaConfig->recovery_codes : []),
         ]);
     }
 

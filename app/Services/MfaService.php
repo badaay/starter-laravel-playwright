@@ -112,10 +112,11 @@ class MfaService
     {
         $mfaConfig = $user->mfaConfiguration;
 
-        if (!$mfaConfig || !$mfaConfig->email_enabled) {
+        if (!$mfaConfig) {
             return false;
         }
 
+        // Allow verification during setup (when email_enabled is false) or when already enabled
         if ($mfaConfig->isEmailCodeValid($code)) {
             $mfaConfig->clearEmailCode();
             return true;
@@ -146,5 +147,27 @@ class MfaService
     public function generateEmailCode(): string
     {
         return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Verify email MFA code for login (requires email MFA to be already enabled)
+     */
+    public function verifyEmailCodeForLogin(User $user, string $code): bool
+    {
+        $mfaConfig = $user->mfaConfiguration;
+
+        if (!$mfaConfig || !$mfaConfig->email_enabled) {
+            return false;
+        }
+
+        if ($mfaConfig->isEmailCodeValid($code)) {
+            $mfaConfig->clearEmailCode();
+            return true;
+        }
+
+        // Increment attempts on failed verification
+        $mfaConfig->incrementEmailCodeAttempts();
+
+        return false;
     }
 }
