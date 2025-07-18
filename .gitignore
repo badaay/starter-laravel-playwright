@@ -1,4 +1,5 @@
-/public
+/public/build
+/public/hot
 /vendor
 /node_modules
 /playwright-report

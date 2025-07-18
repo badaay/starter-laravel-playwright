@@ -47,6 +47,15 @@ export const TEST_CONFIG = {
         qrCode: 'svg[width="300"]', // More specific for the QR code SVG
         secretKey: 'code',
         
+        // Email MFA specific selectors
+        setupEmailMfaButton: 'text=Setup Email MFA',
+        sendEmailCodeButton: 'button:has-text("Send Verification Code")',
+        emailCodeInput: 'input[name="email_code"]',
+        verifyEmailButton: 'button:has-text("Verify and Enable Email MFA")',
+        resendEmailCodeButton: 'button:has-text("Resend Code")',
+        requestEmailCodeButton: 'button:has-text("Send Code to Email")',
+        verifyMfaButton: 'button:has-text("Verify")',
+        
         // Navigation
         profileLink: 'text=Profile',
         todosLink: 'text=Todos',

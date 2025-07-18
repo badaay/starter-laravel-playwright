@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import ThemeSwitchExample from '@/Components/ThemeSwitchExample';
+import EmailVerificationBanner from '@/Components/EmailVerificationBanner';
 
 interface Todo {
     id: number;
@@ -35,6 +36,13 @@ export default function Dashboard() {
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    {/* Email Verification Banner */}
+                    <EmailVerificationBanner 
+                        user={auth.user} 
+                        className="mb-6"
+                        variant="warning"
+                    />
+                    
                     {/* Welcome Section */}
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800 mb-6">
                         <div className="p-6 text-gray-900 dark:text-gray-100">

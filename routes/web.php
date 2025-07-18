@@ -34,6 +34,17 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified', \App\Http\Middleware\EnsureMfaAuthenticated::class])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    // Debug route - remove in production
+    Route::get('/debug/user', function () {
+        $user = Auth::user();
+        return response()->json([
+            'id' => $user->id,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'fresh_email_verified_at' => \App\Models\User::find($user->id)->email_verified_at
+        ]);
+    })->name('debug.user');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -62,6 +73,28 @@ Route::middleware('auth')->group(function () {
 
         // TOTP MFA routes
         Route::post('/totp/disable', [MfaController::class, 'disableTotpMfa'])->name('totp.disable');
+    });
+
+    // Email Verification Routes (standalone)
+    Route::prefix('email-verification')->name('email-verification.')->middleware('auth')->group(function () {
+        Route::get('/', [App\Http\Controllers\EmailVerificationController::class, 'show'])->name('show');
+        Route::post('/send', [App\Http\Controllers\EmailVerificationController::class, 'sendCode'])->name('send');
+        Route::post('/verify', [App\Http\Controllers\EmailVerificationController::class, 'verify'])->name('verify');
+        Route::post('/resend', [App\Http\Controllers\EmailVerificationController::class, 'resend'])->name('resend');
+        Route::get('/status', [App\Http\Controllers\EmailVerificationController::class, 'status'])->name('status');
+
+        // Action-specific verification routes
+        Route::post('/action/send', [App\Http\Controllers\EmailVerificationController::class, 'sendActionCode'])->name('action.send');
+        Route::post('/action/verify', [App\Http\Controllers\EmailVerificationController::class, 'verifyActionCode'])->name('action.verify');
+    });
+
+    // Email Testing Routes (for development/testing)
+    Route::prefix('email-test')->name('email-test.')->middleware('auth')->group(function () {
+        Route::get('/', [App\Http\Controllers\EmailTestController::class, 'index'])->name('index');
+        Route::post('/send', [App\Http\Controllers\EmailTestController::class, 'sendTestCode'])->name('send');
+        Route::post('/verify', [App\Http\Controllers\EmailTestController::class, 'testVerification'])->name('verify');
+        Route::get('/status', [App\Http\Controllers\EmailTestController::class, 'getStatus'])->name('status');
+        Route::post('/demo', [App\Http\Controllers\EmailTestController::class, 'demonstrateEmails'])->name('demo');
     });
 });
 

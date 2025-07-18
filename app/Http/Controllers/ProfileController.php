@@ -18,7 +18,8 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
-        $user = $request->user();
+        // Force fresh user data from database
+        $user = \App\Models\User::find($request->user()->id);
         $mfaConfig = $user->mfaConfiguration;
 
         return Inertia::render('Profile/Edit', [

@@ -29,10 +29,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        
+        // Reload user from database to get fresh data
+        if ($user) {
+            $user = $user->newQuery()->find($user->id);
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
         ];
     }
